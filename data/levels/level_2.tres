@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="LevelData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/level_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/art/piece_arrow.png" id="2"]
+[ext_resource type="Texture2D" path="res://assets/art/level_2_reveal.png" id="3"]
+
+[resource]
+script = ExtResource("1")
+level_id = 2
+grid_size = 10
+target_rotations = Array[int]([1, 2, 3, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+piece_texture = ExtResource("2")
+reveal_art = ExtResource("3")
