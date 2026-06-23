@@ -1,15 +1,11 @@
 [gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://coq5d4epm4jot"]
 
 [ext_resource type="Script" uid="uid://bwjfhmje68cke" path="res://scripts/resources/level_data.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://s65a68y7jt1" path="res://assets/art/piece_arrow.png" id="2"]
 [ext_resource type="Texture2D" uid="uid://b011hko8j4s6w" path="res://assets/art/level_1_reveal.png" id="3"]
 
 [resource]
 script = ExtResource("1")
-target_rotations = Array[int]([1, 2, 3, 0, 0,
-                               0, 0, 0, 0, 0,
-                               0, 0, 0, 0, 0,
-                               0, 0, 0, 0, 0,
-                               0, 0, 0, 0, 0])
-piece_texture = ExtResource("2")
+target_rotations = Array[int]([1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+tile_source_ids = Array[int]([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 reveal_art = ExtResource("3")
+locked_tiles = Array[bool]([false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false])

@@ -1,148 +1,158 @@
 extends Control
 
-## Drives the entire "main game UI":
-##   - left 2/3: an N x N grid of clickable/rotatable squares
-##   - right 1/3: custom art (hidden until solved) + a "Main Menu" button
-##
-## The exact same scene/script is used for every level - grid_size, the
-## piece texture, and the reveal art all come from GameManager.current_level_data.
-## This is what makes level 2 a 10x10 with different art a content change
-## (a new LevelData resource) rather than a code change.
+# --- 1. INJECT THE VISUAL NODES ---
+@export var tile_map_layer: TileMapLayer
+@export var level_label: Label
+@export var art_display: TextureRect
+@export var grid_area: SubViewportContainer
+@export var sub_viewport: SubViewport
 
-## Target overall width/height (px) of the grid area, used to size cells
-## so a 5x5 and a 10x10 grid both fit the left panel nicely.
-const GRID_PIXEL_SIZE: float = 480.0
-
-var level_data: LevelData
-var squares: Array[GridSquare] = []
+@export var level_data: LevelData
 var solved: bool = false
 
-var grid_container: GridContainer
-var art_display: TextureRect
-var level_label: Label
-
-
 func _ready() -> void:
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-
-	level_data = GameManager.current_level_data
-	if level_data == null:
-		push_error("Game scene loaded without GameManager.current_level_data set.")
-		return
-
-	_build_ui()
-	_populate_grid()
-
-
-func _build_ui() -> void:
-	var hbox := HBoxContainer.new()
-	hbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(hbox)
-
-	# --- Left 2/3: the puzzle grid -----------------------------------
-	var grid_area := CenterContainer.new()
-	grid_area.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	grid_area.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	grid_area.size_flags_stretch_ratio = 2.0
-	hbox.add_child(grid_area)
-
-	grid_container = GridContainer.new()
-	grid_container.columns = level_data.grid_size
-	grid_container.add_theme_constant_override("h_separation", 2)
-	grid_container.add_theme_constant_override("v_separation", 2)
-	grid_area.add_child(grid_container)
-
-	# --- Right 1/3: custom art + navigation ---------------------------
-	var right_panel := VBoxContainer.new()
-	right_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	right_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right_panel.size_flags_stretch_ratio = 1.0
-	right_panel.add_theme_constant_override("separation", 12)
-	hbox.add_child(right_panel)
-
-	level_label = Label.new()
+	# OVERRIDE the editor's static data with the dynamic data from the Manager
+	level_data = GameManager.get_current_level()
+	
+	# Populate dynamic data directly
 	level_label.text = "Level %d" % level_data.level_id
-	level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	right_panel.add_child(level_label)
+	_populate_tilemap()
 
-	art_display = TextureRect.new()
-	art_display.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	art_display.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	art_display.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	art_display.modulate = Color(1, 1, 1, 0)  # hidden until the puzzle is solved
-	right_panel.add_child(art_display)
-
-	var back_button := Button.new()
-	back_button.text = "Main Menu"
-	back_button.custom_minimum_size = Vector2(0, 44)
-	back_button.pressed.connect(func(): GameManager.go_to_title())
-	right_panel.add_child(back_button)
-
-
-func _populate_grid() -> void:
+func _populate_tilemap() -> void:
 	var n: int = level_data.grid_size
 	var total: int = n * n
-	var cell_size := Vector2(GRID_PIXEL_SIZE / n, GRID_PIXEL_SIZE / n)
-
 	_validate_level_data(total)
 
+	var tile_size = tile_map_layer.tile_set.tile_size.x
+	var total_map_pixel_width = float(n * tile_size)
+	var padding = 32.0
+	var max_safe_size = 700.0
+
+	var desired_size = total_map_pixel_width + padding
+	
+	# Update our editor-built viewport containers via script
+	var viewport_frame_size = min(desired_size, max_safe_size)
+	grid_area.custom_minimum_size = Vector2(viewport_frame_size, viewport_frame_size)
+	sub_viewport.size = Vector2i(viewport_frame_size, viewport_frame_size)
+
+	if desired_size > max_safe_size:
+		var scale_factor = (max_safe_size - padding) / total_map_pixel_width
+		tile_map_layer.scale = Vector2(scale_factor, scale_factor)
+		total_map_pixel_width *= scale_factor
+	else:
+		tile_map_layer.scale = Vector2.ONE
+
+	var vp_width = float(tile_map_layer.get_viewport().size.x)
+	var center_offset = (vp_width - total_map_pixel_width) / 2.0
+	tile_map_layer.position = Vector2(center_offset, center_offset)
+
 	for i in total:
-		var target_steps: int = level_data.target_rotations[i] if i < level_data.target_rotations.size() else 0
+		var x = i % n
+		var y = i / n
+		var cell_coord := Vector2i(x, y)
+		
+		var source_id = level_data.tile_source_ids[i] if i < level_data.tile_source_ids.size() else 0
+		tile_map_layer.set_cell(cell_coord, source_id, Vector2i.ZERO, 0)
 
-		var sq := GridSquare.new()
-		# Every square always starts at orientation 0 - target_rotations is
-		# the entire puzzle. No randomness here: the same level always
-		# presents the same starting grid and has the same single solution.
-		sq.setup(level_data.piece_texture, 0, target_steps, cell_size)
-		sq.rotated.connect(_on_square_rotated)
+func _input(event: InputEvent) -> void:
+	if solved: return
+	
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		var local_mouse_pos = tile_map_layer.get_local_mouse_position()
+		var clicked_cell = tile_map_layer.local_to_map(local_mouse_pos)
+		
+		var n = level_data.grid_size
+		if clicked_cell.x >= 0 and clicked_cell.x < n and clicked_cell.y >= 0 and clicked_cell.y < n:
+			
+			# Map 2D cell coordinate to 1D index
+			var index = (clicked_cell.y * n) + clicked_cell.x
+			
+			# Check if the array has this data and if it's marked as fixed
+			if index < level_data.locked_tiles.size() and level_data.locked_tiles[index]:
+				print("This tile is locked!")
+				return # Early exit! Ignore the click entirely.
+				
+			_rotate_tile_at(clicked_cell)
 
-		grid_container.add_child(sq)
-		squares.append(sq)
-
-
-## Catches level-authoring mistakes early and loudly, instead of silently
-## defaulting to 0 or letting the puzzle spawn already solved.
-func _validate_level_data(expected_count: int) -> void:
-	var rotations: Array[int] = level_data.target_rotations
-
-	if rotations.size() != expected_count:
-		push_error("LevelData level_id=%d has %d target_rotations but grid_size=%d needs %d." % [
-			level_data.level_id, rotations.size(), level_data.grid_size, expected_count
-		])
-		return
-
-	var all_zero := true
-	for r in rotations:
-		if r != 0:
-			all_zero = false
-			break
-	if all_zero:
-		push_warning("LevelData level_id=%d: every target_rotation is 0. Since every square also starts at 0, this puzzle would be solved instantly." % level_data.level_id)
-
-
-func _on_square_rotated(_square: GridSquare) -> void:
-	if solved:
-		return
+func _rotate_tile_at(cell: Vector2i) -> void:
+	var source_id = tile_map_layer.get_cell_source_id(cell)
+	var atlas_coords = tile_map_layer.get_cell_atlas_coords(cell)
+	var current_alt = tile_map_layer.get_cell_alternative_tile(cell)
+	
+	# Decode Godot's bitwise transform alternatives into a 0-3 index
+	var current_rot = 0
+	if current_alt == (TileSetAtlasSource.TRANSFORM_TRANSPOSE | TileSetAtlasSource.TRANSFORM_FLIP_H): current_rot = 1
+	if current_alt == (TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V): current_rot = 2
+	if current_alt == (TileSetAtlasSource.TRANSFORM_TRANSPOSE | TileSetAtlasSource.TRANSFORM_FLIP_V): current_rot = 3
+	
+	# Clockwise rotation step
+	var next_rot = (current_rot + 1) % 4
+	
+	# Encode back to Godot flags
+	var next_alt = 0
+	match next_rot:
+		1: next_alt = TileSetAtlasSource.TRANSFORM_TRANSPOSE | TileSetAtlasSource.TRANSFORM_FLIP_H
+		2: next_alt = TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V
+		3: next_alt = TileSetAtlasSource.TRANSFORM_TRANSPOSE | TileSetAtlasSource.TRANSFORM_FLIP_V
+		
+	tile_map_layer.set_cell(cell, source_id, atlas_coords, next_alt)
+	
 	if _check_solved():
 		solved = true
 		_play_solved_sequence()
 
-
 func _check_solved() -> bool:
-	for s in squares:
-		if not s.is_correct():
+	var n = level_data.grid_size
+	for i in (n * n):
+		var x = i % n
+		var y = i / n
+		var cell = Vector2i(x, y)
+		
+		var alt_id = tile_map_layer.get_cell_alternative_tile(cell)
+		
+		var current_rotation = 0
+		if alt_id == (TileSetAtlasSource.TRANSFORM_TRANSPOSE | TileSetAtlasSource.TRANSFORM_FLIP_H): current_rotation = 1
+		if alt_id == (TileSetAtlasSource.TRANSFORM_FLIP_H | TileSetAtlasSource.TRANSFORM_FLIP_V): current_rotation = 2
+		if alt_id == (TileSetAtlasSource.TRANSFORM_TRANSPOSE | TileSetAtlasSource.TRANSFORM_FLIP_V): current_rotation = 3
+		
+		if current_rotation != level_data.target_rotations[i]:
 			return false
 	return true
 
 
-func _play_solved_sequence() -> void:
-	for s in squares:
-		s.disabled = true
+## Catches level-authoring mistakes early and loudly, instead of
+## silently defaulting to 0 or letting the puzzle spawn already solved.
+func _validate_level_data(expected_count: int) -> void:
+	# 1. Verify rotation solutions array
+	if level_data.target_rotations.size() != expected_count:
+		push_error("LevelData level_id=%d has %d target_rotations but grid_size=%d needs %d." % [
+			level_data.level_id, level_data.target_rotations.size(), level_data.grid_size, expected_count
+		])
+		return
 
+	# 2. Verify individual texture asset IDs array
+	if level_data.tile_source_ids.size() != expected_count:
+		push_error("LevelData level_id=%d has %d tile_source_ids but grid_size=%d needs %d." % [
+			level_data.level_id, level_data.tile_source_ids.size(), level_data.grid_size, expected_count
+		])
+		return
+
+	# 3. Handle locked tile allocations gracefully
+	if level_data.locked_tiles.size() != expected_count:
+		push_warning("LevelData level_id=%d: locked_tiles size mismatch or missing. Defaulting all to interactive." % level_data.level_id)
+		# Safe programmatic fallback generation to prevent runtime crashes
+		level_data.locked_tiles.resize(expected_count)
+		level_data.locked_tiles.fill(false)
+
+func _play_solved_sequence() -> void:
+	# 1. Disable further input so the player can't mess up the board 
+	# while the animation is playing.
+	solved = true 
+	
 	art_display.texture = level_data.reveal_art
 
-	# Wait a frame so the TextureRect has its final laid-out size before we
-	# use it to compute a center pivot for the scale-in animation.
+	# Wait a frame so the TextureRect has its final laid-out size before
+	# using it to compute a center pivot for the scale-in animation.
 	await get_tree().process_frame
 	art_display.pivot_offset = art_display.size / 2.0
 	art_display.scale = Vector2(0.85, 0.85)
@@ -152,4 +162,9 @@ func _play_solved_sequence() -> void:
 	tween.parallel().tween_property(art_display, "scale", Vector2.ONE, 0.6) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_interval(1.4)
+	
+	# 2. Hand control to the global manager to load the next level
 	tween.tween_callback(GameManager.level_complete)
+
+func _on_back_button_pressed() -> void:
+	GameManager.go_to_title()
