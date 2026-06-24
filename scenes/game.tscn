@@ -3,6 +3,48 @@
 [ext_resource type="Script" uid="uid://dwu4y1w8wnjl3" path="res://scripts/game.gd" id="1"]
 [ext_resource type="Resource" uid="uid://coq5d4epm4jot" path="res://data/levels/level_1.tres" id="2_lnu2h"]
 [ext_resource type="TileSet" uid="uid://dfo2jq8uml1xv" path="res://scripts/resources/primary_tileset.tres" id="2_yqjtg"]
+[ext_resource type="StyleBox" uid="uid://ditdwfd1oynqh" path="res://assets/art/main_background_1.tres" id="4_u5sy4"]
+[ext_resource type="StyleBox" uid="uid://hfymkx6hpig2" path="res://assets/art/main_background_2.tres" id="5_gee14"]
+[ext_resource type="StyleBox" uid="uid://dj7yhy3sya8rw" path="res://assets/art/main_background_3.tres" id="6_0tnpc"]
+[ext_resource type="StyleBox" uid="uid://bwcy38drltfha" path="res://assets/art/main_background_4.tres" id="7_vtaks"]
+
+[sub_resource type="Animation" id="Animation_kvpfn"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:theme_override_styles/panel")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [null]
+}
+
+[sub_resource type="Animation" id="Animation_dinhu"]
+resource_name = "main_background"
+length = 0.8
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:theme_override_styles/panel")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0.2, 0.4, 0.6, 0.8),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [ExtResource("4_u5sy4"), ExtResource("5_gee14"), ExtResource("6_0tnpc"), ExtResource("7_vtaks")]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_kvuet"]
+_data = {
+&"RESET": SubResource("Animation_kvpfn"),
+&"main_background": SubResource("Animation_dinhu")
+}
 
 [node name="Game" type="Control" unique_id=49015350 node_paths=PackedStringArray("tile_map_layer", "level_label", "art_display", "grid_area", "sub_viewport")]
 layout_mode = 3
@@ -12,14 +54,14 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1")
-tile_map_layer = NodePath("MainHBox/LeftContainer/GridArea/SubViewport/TileMapLayer")
-level_label = NodePath("MainHBox/RightContainer/LevelLabel")
-art_display = NodePath("MainHBox/RightContainer/ArtDisplay")
-grid_area = NodePath("MainHBox/LeftContainer/GridArea")
-sub_viewport = NodePath("MainHBox/LeftContainer/GridArea/SubViewport")
+tile_map_layer = NodePath("GameplayScreen/MainHBox/LeftContainer/GridArea/SubViewport/TileMapLayer")
+level_label = NodePath("GameplayScreen/MainHBox/RightContainer/LevelLabel")
+art_display = NodePath("GameplayScreen/MainHBox/RightContainer/ArtDisplay")
+grid_area = NodePath("GameplayScreen/MainHBox/LeftContainer/GridArea")
+sub_viewport = NodePath("GameplayScreen/MainHBox/LeftContainer/GridArea/SubViewport")
 level_data = ExtResource("2_lnu2h")
 
-[node name="MainHBox" type="HBoxContainer" parent="." unique_id=1460107036]
+[node name="GameplayScreen" type="PanelContainer" parent="." unique_id=900207284]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -27,37 +69,49 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="LeftContainer" type="CenterContainer" parent="MainHBox" unique_id=1097377132]
+[node name="MainHBox" type="HBoxContainer" parent="GameplayScreen" unique_id=1460107036]
+layout_mode = 2
+
+[node name="LeftContainer" type="CenterContainer" parent="GameplayScreen/MainHBox" unique_id=1097377132]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 2.0
 
-[node name="GridArea" type="SubViewportContainer" parent="MainHBox/LeftContainer" unique_id=1166985069]
+[node name="GridArea" type="SubViewportContainer" parent="GameplayScreen/MainHBox/LeftContainer" unique_id=1166985069]
 layout_mode = 2
 
-[node name="SubViewport" type="SubViewport" parent="MainHBox/LeftContainer/GridArea" unique_id=890970091]
+[node name="SubViewport" type="SubViewport" parent="GameplayScreen/MainHBox/LeftContainer/GridArea" unique_id=890970091]
 transparent_bg = true
-size = Vector2i(732, 732)
+handle_input_locally = false
+size = Vector2i(2, 2)
+render_target_update_mode = 4
 
-[node name="TileMapLayer" type="TileMapLayer" parent="MainHBox/LeftContainer/GridArea/SubViewport" unique_id=1922785845]
+[node name="TileMapLayer" type="TileMapLayer" parent="GameplayScreen/MainHBox/LeftContainer/GridArea/SubViewport" unique_id=1922785845]
 tile_set = ExtResource("2_yqjtg")
 
-[node name="RightContainer" type="VBoxContainer" parent="MainHBox" unique_id=927769154]
+[node name="RightContainer" type="VBoxContainer" parent="GameplayScreen/MainHBox" unique_id=927769154]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
-[node name="LevelLabel" type="Label" parent="MainHBox/RightContainer" unique_id=2026284186]
+[node name="LevelLabel" type="Label" parent="GameplayScreen/MainHBox/RightContainer" unique_id=2026284186]
 layout_mode = 2
 
-[node name="ArtDisplay" type="TextureRect" parent="MainHBox/RightContainer" unique_id=213942154]
+[node name="ArtDisplay" type="TextureRect" parent="GameplayScreen/MainHBox/RightContainer" unique_id=213942154]
 layout_mode = 2
 size_flags_vertical = 3
 stretch_mode = 5
 
-[node name="BackButton" type="Button" parent="MainHBox/RightContainer" unique_id=796452799]
+[node name="BackButton" type="Button" parent="GameplayScreen/MainHBox/RightContainer" unique_id=796452799]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 text = "Main Menu"
 
-[connection signal="pressed" from="MainHBox/RightContainer/BackButton" to="." method="_on_back_button_pressed"]
+[node name="AnimationPlayer" type="AnimationPlayer" parent="GameplayScreen" unique_id=1280332583]
+libraries/ = SubResource("AnimationLibrary_kvuet")
+autoplay = &"main_background"
+
+[node name="TextureRect" type="TextureRect" parent="GameplayScreen" unique_id=429710223]
+layout_mode = 2
+
+[connection signal="pressed" from="GameplayScreen/MainHBox/RightContainer/BackButton" to="." method="_on_back_button_pressed"]
