@@ -13,3 +13,6 @@ class_name LevelData
 ## true = fixed in position (clicking does nothing)
 ## false = normal rotatable puzzle piece
 @export var locked_tiles: Array[bool] = []
+
+## Unique background animation for each level
+@export var bg_animation_name: StringName

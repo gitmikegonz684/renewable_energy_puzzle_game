@@ -1,6 +1,0 @@
-[gd_resource type="StyleBoxTexture" format=3 uid="uid://ditdwfd1oynqh"]
-
-[ext_resource type="Texture2D" uid="uid://cuisxvdkwmxbk" path="res://assets/art/PXL_20240704_200316894~2.png" id="1_f86og"]
-
-[resource]
-texture = ExtResource("1_f86og")

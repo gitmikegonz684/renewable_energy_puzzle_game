@@ -1,19 +1,19 @@
 [gd_resource type="TileSet" format=3 uid="uid://dfo2jq8uml1xv"]
 
-[ext_resource type="Texture2D" uid="uid://b8s2cgvj75xfb" path="res://assets/art/star.png" id="1_hdyv1"]
-[ext_resource type="Texture2D" uid="uid://s65a68y7jt1" path="res://assets/art/piece_arrow.png" id="2_86umy"]
+[ext_resource type="Texture2D" uid="uid://s65a68y7jt1" path="res://assets/sources/piece_arrow.png" id="1_hdyv1"]
+[ext_resource type="Texture2D" uid="uid://b8s2cgvj75xfb" path="res://assets/sources/star.png" id="2_86umy"]
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_l212s"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_qvy7d"]
 texture = ExtResource("1_hdyv1")
 texture_region_size = Vector2i(128, 128)
 0:0/0 = 0
 
-[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_qvy7d"]
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_l212s"]
 texture = ExtResource("2_86umy")
 texture_region_size = Vector2i(128, 128)
 0:0/0 = 0
 
 [resource]
 tile_size = Vector2i(128, 128)
-sources/0 = SubResource("TileSetAtlasSource_l212s")
-sources/1 = SubResource("TileSetAtlasSource_qvy7d")
+sources/0 = SubResource("TileSetAtlasSource_qvy7d")
+sources/1 = SubResource("TileSetAtlasSource_l212s")

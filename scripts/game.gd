@@ -6,8 +6,11 @@ extends Control
 @export var art_display: TextureRect
 @export var grid_area: SubViewportContainer
 @export var sub_viewport: SubViewport
-
+@export var camera: Camera2D
 @export var level_data: LevelData
+
+@onready var bg_animation_player: AnimationPlayer = $GameplayScreen/AnimationPlayer
+
 var solved: bool = false
 
 func _ready() -> void:
@@ -16,7 +19,20 @@ func _ready() -> void:
 	
 	# Populate dynamic data directly
 	level_label.text = "Level %d" % level_data.level_id
+	
+	# Trigger the specific animation for this level
+	_play_level_background()
+	
 	_populate_tilemap()
+	
+func _play_level_background() -> void:
+	# Failsafe: Check if the string is empty so the game doesn't crash 
+	# if you forgot to type a name in the Inspector for a specific level.
+	if level_data.bg_animation_name == &"":
+		return 
+		
+	# Tell the AnimationPlayer to play the string name we saved in the resource
+	bg_animation_player.play(level_data.bg_animation_name)
 
 func _populate_tilemap() -> void:
 	var n: int = level_data.grid_size
@@ -25,27 +41,8 @@ func _populate_tilemap() -> void:
 
 	var tile_size = tile_map_layer.tile_set.tile_size.x
 	var total_map_pixel_width = float(n * tile_size)
-	var padding = 32.0
-	var max_safe_size = 700.0
 
-	var desired_size = total_map_pixel_width + padding
-	
-	# Update our editor-built viewport containers via script
-	var viewport_frame_size = min(desired_size, max_safe_size)
-	grid_area.custom_minimum_size = Vector2(viewport_frame_size, viewport_frame_size)
-	sub_viewport.size = Vector2i(viewport_frame_size, viewport_frame_size)
-
-	if desired_size > max_safe_size:
-		var scale_factor = (max_safe_size - padding) / total_map_pixel_width
-		tile_map_layer.scale = Vector2(scale_factor, scale_factor)
-		total_map_pixel_width *= scale_factor
-	else:
-		tile_map_layer.scale = Vector2.ONE
-
-	var vp_width = float(tile_map_layer.get_viewport().size.x)
-	var center_offset = (vp_width - total_map_pixel_width) / 2.0
-	tile_map_layer.position = Vector2(center_offset, center_offset)
-
+	# 1. Place the tiles as normal
 	for i in total:
 		var x = i % n
 		var y = i / n
@@ -53,6 +50,27 @@ func _populate_tilemap() -> void:
 		
 		var source_id = level_data.tile_source_ids[i] if i < level_data.tile_source_ids.size() else 0
 		tile_map_layer.set_cell(cell_coord, source_id, Vector2i.ZERO, 0)
+
+	# 2. Reset TileMapLayer position just in case
+	tile_map_layer.position = Vector2.ZERO
+
+	# 3. Get the Camera2D node (assuming it's named "Camera2D" and is a sibling)
+	#var camera: Camera2D = get_node("../Camera2D") # Adjust path if your script is on the TileMapLayer itself
+
+	# 4. Center the Camera exactly in the middle of the generated map
+	var map_center = total_map_pixel_width / 2.0
+	camera.position = Vector2(map_center, map_center)
+
+	# 5. Calculate the perfect zoom factor
+	var vp_size = tile_map_layer.get_viewport().size
+	var padding = 64.0 # Extra space so tiles don't touch the absolute edge of the UI frame
+	var padded_map_size = total_map_pixel_width + padding
+	
+	# Divide the viewport size by the map size. 
+	# min() ensures we scale based on the tightest dimension (x or y)
+	var zoom_factor = min(vp_size.x, vp_size.y) / padded_map_size
+	
+	camera.zoom = Vector2(zoom_factor, zoom_factor)
 
 func _input(event: InputEvent) -> void:
 	if solved: return
@@ -150,7 +168,7 @@ func _play_solved_sequence() -> void:
 	solved = true 
 	
 	art_display.texture = level_data.reveal_art
-
+	
 	# Wait a frame so the TextureRect has its final laid-out size before
 	# using it to compute a center pivot for the scale-in animation.
 	await get_tree().process_frame

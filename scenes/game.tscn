@@ -3,10 +3,10 @@
 [ext_resource type="Script" uid="uid://dwu4y1w8wnjl3" path="res://scripts/game.gd" id="1"]
 [ext_resource type="Resource" uid="uid://coq5d4epm4jot" path="res://data/levels/level_1.tres" id="2_lnu2h"]
 [ext_resource type="TileSet" uid="uid://dfo2jq8uml1xv" path="res://scripts/resources/primary_tileset.tres" id="2_yqjtg"]
-[ext_resource type="StyleBox" uid="uid://ditdwfd1oynqh" path="res://assets/art/main_background_1.tres" id="4_u5sy4"]
-[ext_resource type="StyleBox" uid="uid://hfymkx6hpig2" path="res://assets/art/main_background_2.tres" id="5_gee14"]
-[ext_resource type="StyleBox" uid="uid://dj7yhy3sya8rw" path="res://assets/art/main_background_3.tres" id="6_0tnpc"]
-[ext_resource type="StyleBox" uid="uid://bwcy38drltfha" path="res://assets/art/main_background_4.tres" id="7_vtaks"]
+[ext_resource type="StyleBox" uid="uid://ditdwfd1oynqh" path="res://assets/textures/main_background_1.tres" id="4_u5sy4"]
+[ext_resource type="StyleBox" uid="uid://hfymkx6hpig2" path="res://assets/textures/main_background_2.tres" id="5_gee14"]
+[ext_resource type="StyleBox" uid="uid://dj7yhy3sya8rw" path="res://assets/textures/main_background_3.tres" id="6_0tnpc"]
+[ext_resource type="StyleBox" uid="uid://bwcy38drltfha" path="res://assets/textures/main_background_4.tres" id="7_vtaks"]
 
 [sub_resource type="Animation" id="Animation_kvpfn"]
 length = 0.001
@@ -21,6 +21,22 @@ tracks/0/keys = {
 "transitions": PackedFloat32Array(1),
 "update": 1,
 "values": [null]
+}
+
+[sub_resource type="Animation" id="Animation_u5sy4"]
+resource_name = "level2_bg"
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath(".:theme_override_styles/panel")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0.20000002, 0.6),
+"transitions": PackedFloat32Array(1, 1),
+"update": 1,
+"values": [ExtResource("5_gee14"), ExtResource("7_vtaks")]
 }
 
 [sub_resource type="Animation" id="Animation_dinhu"]
@@ -43,10 +59,11 @@ tracks/0/keys = {
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_kvuet"]
 _data = {
 &"RESET": SubResource("Animation_kvpfn"),
+&"level2_bg": SubResource("Animation_u5sy4"),
 &"main_background": SubResource("Animation_dinhu")
 }
 
-[node name="Game" type="Control" unique_id=49015350 node_paths=PackedStringArray("tile_map_layer", "level_label", "art_display", "grid_area", "sub_viewport")]
+[node name="Game" type="Control" unique_id=49015350 node_paths=PackedStringArray("tile_map_layer", "level_label", "art_display", "grid_area", "sub_viewport", "camera")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -59,6 +76,7 @@ level_label = NodePath("GameplayScreen/MainHBox/RightContainer/LevelLabel")
 art_display = NodePath("GameplayScreen/MainHBox/RightContainer/ArtDisplay")
 grid_area = NodePath("GameplayScreen/MainHBox/LeftContainer/GridArea")
 sub_viewport = NodePath("GameplayScreen/MainHBox/LeftContainer/GridArea/SubViewport")
+camera = NodePath("GameplayScreen/MainHBox/LeftContainer/GridArea/SubViewport/Camera2D")
 level_data = ExtResource("2_lnu2h")
 
 [node name="GameplayScreen" type="PanelContainer" parent="." unique_id=900207284]
@@ -78,16 +96,21 @@ size_flags_horizontal = 3
 size_flags_stretch_ratio = 2.0
 
 [node name="GridArea" type="SubViewportContainer" parent="GameplayScreen/MainHBox/LeftContainer" unique_id=1166985069]
+custom_minimum_size = Vector2(1000, 1000)
+propagate_maximum_size = false
 layout_mode = 2
+stretch = true
 
 [node name="SubViewport" type="SubViewport" parent="GameplayScreen/MainHBox/LeftContainer/GridArea" unique_id=890970091]
 transparent_bg = true
 handle_input_locally = false
-size = Vector2i(2, 2)
+size = Vector2i(1000, 1000)
 render_target_update_mode = 4
 
 [node name="TileMapLayer" type="TileMapLayer" parent="GameplayScreen/MainHBox/LeftContainer/GridArea/SubViewport" unique_id=1922785845]
 tile_set = ExtResource("2_yqjtg")
+
+[node name="Camera2D" type="Camera2D" parent="GameplayScreen/MainHBox/LeftContainer/GridArea/SubViewport" unique_id=632515340]
 
 [node name="RightContainer" type="VBoxContainer" parent="GameplayScreen/MainHBox" unique_id=927769154]
 layout_mode = 2
@@ -109,9 +132,5 @@ text = "Main Menu"
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="GameplayScreen" unique_id=1280332583]
 libraries/ = SubResource("AnimationLibrary_kvuet")
-autoplay = &"main_background"
-
-[node name="TextureRect" type="TextureRect" parent="GameplayScreen" unique_id=429710223]
-layout_mode = 2
 
 [connection signal="pressed" from="GameplayScreen/MainHBox/RightContainer/BackButton" to="." method="_on_back_button_pressed"]
