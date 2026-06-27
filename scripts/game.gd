@@ -122,6 +122,8 @@ func _rotate_tile_at(cell: Vector2i) -> void:
 func _check_solved() -> bool:
 	var n = level_data.grid_size
 	for i in (n * n):
+		if not level_data.required_tiles[i]:
+			continue
 		var x = i % n
 		var y = i / n
 		var cell = Vector2i(x, y)
@@ -167,6 +169,10 @@ func _play_solved_sequence() -> void:
 	# while the animation is playing.
 	solved = true 
 	
+	# 2. Play tile animation
+	_play_tile_animation()
+	
+	# 3. Play art animation
 	art_display.texture = level_data.reveal_art
 	
 	# Wait a frame so the TextureRect has its final laid-out size before
@@ -181,8 +187,24 @@ func _play_solved_sequence() -> void:
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_interval(1.4)
 	
-	# 2. Hand control to the global manager to load the next level
+	# 4. Hand control to the global manager to load the next level
 	tween.tween_callback(GameManager.level_complete)
+
+func _play_tile_animation() -> void:
+	# Only updates and applies the tile resource texture for now.
+	var n = level_data.grid_size
+	for i in (n * n):
+		if level_data.required_tiles[i]:
+			var x = i % n
+			var y = i / n
+			var cell = Vector2i(x, y)
+			var current_atlas_coords = tile_map_layer.get_cell_atlas_coords(cell)
+			var current_alternative_tile = tile_map_layer.get_cell_alternative_tile(cell)
+			var tile_resource_id = level_data.tile_source_ids[i] + 100
+			tile_map_layer.set_cell(cell, tile_resource_id, current_atlas_coords, current_alternative_tile)
+			#print(tile_map_layer.get_cell_source_id(cell))
+			#print(tile_map_layer.get_cell_atlas_coords(cell))
+			#print(tile_map_layer.get_cell_alternative_tile(cell))
 
 func _on_back_button_pressed() -> void:
 	GameManager.go_to_title()

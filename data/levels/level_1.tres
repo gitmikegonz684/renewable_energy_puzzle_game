@@ -5,8 +5,9 @@
 
 [resource]
 script = ExtResource("1")
-target_rotations = Array[int]([1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-tile_source_ids = Array[int]([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+target_rotations = Array[int]([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0])
+tile_source_ids = Array[int]([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 1, 100, 0, 2, 0, 0, 0, 0, 1, 0, 1, 0])
 reveal_art = ExtResource("1_5gghx")
-locked_tiles = Array[bool]([false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false])
+locked_tiles = Array[bool]([false, false, false, false, false, false, false, false, false, false, false, true, false, false, true, false, true, false, false, false, false, false, false, false, false])
 bg_animation_name = &"main_background"
+required_tiles = Array[bool]([false, false, false, false, false, false, false, false, false, false, false, false, false, true, false, false, false, false, true, false, false, true, true, true, false])

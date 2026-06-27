@@ -16,3 +16,7 @@ class_name LevelData
 
 ## Unique background animation for each level
 @export var bg_animation_name: StringName
+
+## Flag tiles required for puzzle solution
+## Ignores tiles when calculating solve state
+@export var required_tiles: Array[bool] = []
